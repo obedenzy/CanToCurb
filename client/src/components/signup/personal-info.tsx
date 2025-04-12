@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
+
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -57,6 +58,7 @@ export default function PersonalInfo({
     await form.trigger();
 
     if (!form.formState.isValid) {
+      const { toast } = useToast();
       toast({
         title: "Error",
         description: "Please check your information and try again.",
