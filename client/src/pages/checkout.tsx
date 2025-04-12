@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import Navbar from '@/components/layout/navbar';
+import Footer from '@/components/layout/footer';
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -145,50 +147,85 @@ export default function Checkout() {
   // Handle loading and error states
   if (isLoading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-xl">Initializing payment...</p>
+      <>
+        <Helmet>
+          <title>Checkout | CanMonkey</title>
+        </Helmet>
+        <Navbar user={null} />
+        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-xl">Initializing payment...</p>
+          </div>
         </div>
-      </div>
+        <Footer />
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertCircle className="h-12 w-12 mx-auto mb-2 text-red-500" />
-            <CardTitle>Payment Error</CardTitle>
-            <CardDescription>There was a problem initializing your payment</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-red-600">{error}</p>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <Button onClick={() => window.history.back()}>Go Back</Button>
-          </CardFooter>
-        </Card>
-      </div>
+      <>
+        <Helmet>
+          <title>Payment Error | CanMonkey</title>
+        </Helmet>
+        <Navbar user={null} />
+        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <AlertCircle className="h-12 w-12 mx-auto mb-2 text-red-500" />
+              <CardTitle>Payment Error</CardTitle>
+              <CardDescription>There was a problem initializing your payment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-red-600">{error}</p>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <Button onClick={() => window.history.back()}>Go Back</Button>
+            </CardFooter>
+          </Card>
+        </div>
+        <Footer />
+      </>
     );
   }
 
   // Make sure we have a client secret to proceed
   if (!clientSecret) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <p className="text-xl">Unable to initialize payment. Please try again.</p>
-      </div>
+      <>
+        <Helmet>
+          <title>Payment Error | CanMonkey</title>
+        </Helmet>
+        <Navbar user={null} />
+        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <AlertCircle className="h-12 w-12 mx-auto mb-2 text-red-500" />
+              <CardTitle>Payment Error</CardTitle>
+              <CardDescription>There was a problem with your payment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-red-600">Unable to initialize payment. Please try again.</p>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <Button onClick={() => window.history.back()}>Go Back</Button>
+            </CardFooter>
+          </Card>
+        </div>
+        <Footer />
+      </>
     );
   }
 
   return (
     <>
       <Helmet>
-        <title>Checkout | TrashMonkey</title>
-        <meta name="description" content="Complete your payment for TrashMonkey's on-demand service" />
+        <title>Checkout | CanMonkey</title>
+        <meta name="description" content="Complete your payment for CanMonkey's on-demand service" />
       </Helmet>
+      
+      <Navbar user={null} />
       
       <div className="py-12 bg-neutral">
         <div className="container max-w-3xl mx-auto px-4">
@@ -224,6 +261,8 @@ export default function Checkout() {
           </Card>
         </div>
       </div>
+      
+      <Footer />
     </>
   );
 };
