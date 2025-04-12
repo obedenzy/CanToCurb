@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 const navigationItems = [
   { href: "/", label: "Home" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/on-demand", label: "OnDemand" },
   { href: "/contact", label: "Contact" },
 ];
 
