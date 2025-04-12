@@ -28,7 +28,7 @@
   }
 
   .glass-effect {
-    @apply bg-white/90 backdrop-blur-lg border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02];
+    @apply bg-white/90 backdrop-blur-lg border border-white/20 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] transition-all duration-300 hover:scale-[1.02];
   }
 
   .hero-pattern {

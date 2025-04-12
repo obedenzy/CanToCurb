@@ -52,7 +52,7 @@ export default function Header() {
   }, [location]);
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <header className="bg-gradient-to-r from-white via-white to-blue-50 border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-sm">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex-shrink-0 flex items-center">
