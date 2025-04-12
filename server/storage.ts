@@ -34,6 +34,24 @@ export interface IStorage {
   // Plan operations
   getAllPlans(): Promise<Plan[]>;
   getPlanById(id: number): Promise<Plan | undefined>;
+  
+  // Service Record operations
+  createServiceRecord(serviceRecord: InsertServiceRecord): Promise<ServiceRecord>;
+  getServiceRecordById(id: number): Promise<ServiceRecord | undefined>;
+  getAllServiceRecords(filters?: {
+    userId?: number;
+    propertyId?: number;
+    status?: string;
+    serviceType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    assignedStaffId?: number;
+  }): Promise<ServiceRecord[]>;
+  updateServiceRecord(id: number, updates: Partial<Omit<InsertServiceRecord, 'id'>>): Promise<ServiceRecord>;
+  getUnassignedServiceRecords(): Promise<ServiceRecord[]>;
+  
+  // Staff operations
+  getStaffMembers(): Promise<User[]>;
 }
 
 export class MemStorage implements IStorage {

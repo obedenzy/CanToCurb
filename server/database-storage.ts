@@ -4,10 +4,11 @@ import {
   properties, type Property, type InsertProperty,
   subscriptions, type Subscription, type InsertSubscription,
   contacts, type Contact, type InsertContact,
-  plans, type Plan
+  plans, type Plan,
+  serviceRecords, type ServiceRecord, type InsertServiceRecord
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, sql, like, asc, or, isNull, not } from "drizzle-orm";
 import { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
@@ -155,6 +156,126 @@ export class DatabaseStorage implements IStorage {
       .where(eq(plans.id, id));
     
     return plan;
+  }
+  
+  // Service Record Methods
+  async createServiceRecord(serviceRecord: InsertServiceRecord): Promise<ServiceRecord> {
+    const [record] = await db
+      .insert(serviceRecords)
+      .values(serviceRecord)
+      .returning();
+    
+    return record;
+  }
+  
+  async getServiceRecordById(id: number): Promise<ServiceRecord | undefined> {
+    const [record] = await db
+      .select()
+      .from(serviceRecords)
+      .where(eq(serviceRecords.id, id));
+    
+    return record;
+  }
+  
+  async getAllServiceRecords(filters?: {
+    userId?: number;
+    propertyId?: number;
+    status?: string;
+    serviceType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    assignedStaffId?: number;
+  }): Promise<ServiceRecord[]> {
+    let query = db.select().from(serviceRecords);
+    
+    // Apply filters if provided
+    if (filters) {
+      const conditions = [];
+      
+      if (filters.userId !== undefined) {
+        conditions.push(eq(serviceRecords.userId, filters.userId));
+      }
+      
+      if (filters.propertyId !== undefined) {
+        conditions.push(eq(serviceRecords.propertyId, filters.propertyId));
+      }
+      
+      if (filters.status !== undefined) {
+        conditions.push(eq(serviceRecords.status, filters.status));
+      }
+      
+      if (filters.serviceType !== undefined) {
+        conditions.push(eq(serviceRecords.serviceType, filters.serviceType));
+      }
+      
+      if (filters.assignedStaffId !== undefined) {
+        conditions.push(eq(serviceRecords.assignedStaffId, filters.assignedStaffId));
+      }
+      
+      if (filters.startDate !== undefined && filters.endDate !== undefined) {
+        conditions.push(
+          and(
+            sql`${serviceRecords.scheduledDate} >= ${filters.startDate}`,
+            sql`${serviceRecords.scheduledDate} <= ${filters.endDate}`
+          )
+        );
+      } else if (filters.startDate !== undefined) {
+        conditions.push(sql`${serviceRecords.scheduledDate} >= ${filters.startDate}`);
+      } else if (filters.endDate !== undefined) {
+        conditions.push(sql`${serviceRecords.scheduledDate} <= ${filters.endDate}`);
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    // Order by scheduled date, most recent first
+    query = query.orderBy(desc(serviceRecords.scheduledDate));
+    
+    return query;
+  }
+  
+  async updateServiceRecord(id: number, updates: Partial<Omit<InsertServiceRecord, 'id'>>): Promise<ServiceRecord> {
+    const [updatedRecord] = await db
+      .update(serviceRecords)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(serviceRecords.id, id))
+      .returning();
+    
+    if (!updatedRecord) {
+      throw new Error(`Service record with ID ${id} not found`);
+    }
+    
+    return updatedRecord;
+  }
+  
+  async getUnassignedServiceRecords(): Promise<ServiceRecord[]> {
+    return db
+      .select()
+      .from(serviceRecords)
+      .where(
+        and(
+          isNull(serviceRecords.assignedStaffId),
+          eq(serviceRecords.status, 'scheduled')
+        )
+      )
+      .orderBy(asc(serviceRecords.scheduledDate));
+  }
+  
+  async getStaffMembers(): Promise<User[]> {
+    return db
+      .select()
+      .from(users)
+      .where(
+        or(
+          eq(users.role, 'admin'),
+          eq(users.role, 'staff')
+        )
+      );
   }
 }
 

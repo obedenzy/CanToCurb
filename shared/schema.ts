@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  role: text("role").default("customer").notNull(),
 });
 
 export const addresses = pgTable("addresses", {
@@ -73,6 +74,21 @@ export const contacts = pgTable("contacts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const serviceRecords = pgTable("service_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  propertyId: integer("property_id").references(() => properties.id).notNull(),
+  serviceType: text("service_type").notNull(), // "regular", "on-demand", etc.
+  status: text("status").notNull().default("scheduled"), // "scheduled", "completed", "cancelled"
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  completedDate: timestamp("completed_date"),
+  notes: text("notes"),
+  imageUrl: text("image_url"), // URL to service verification photo
+  assignedStaffId: integer("assigned_staff_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -99,6 +115,12 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   createdAt: true
 });
 
+export const insertServiceRecordSchema = createInsertSchema(serviceRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -114,5 +136,8 @@ export type Subscription = typeof subscriptions.$inferSelect;
 
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;
+
+export type InsertServiceRecord = z.infer<typeof insertServiceRecordSchema>;
+export type ServiceRecord = typeof serviceRecords.$inferSelect;
 
 export type Plan = typeof plans.$inferSelect;
