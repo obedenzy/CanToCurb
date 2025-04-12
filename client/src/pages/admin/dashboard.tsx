@@ -22,8 +22,14 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   
+  // Define auth response type
+  type AuthResponse = {
+    authenticated: boolean;
+    user: User;
+  };
+  
   // Check if user is admin/staff
-  const { data: authData, isLoading: authLoading, isError: authError } = useQuery({
+  const { data: authData, isLoading: authLoading, isError: authError } = useQuery<AuthResponse>({
     queryKey: ['/api/auth-status'],
     queryFn: getQueryFn({ on401: 'throw' }),
     retry: false,
@@ -445,7 +451,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : staffMembers?.length > 0 ? (
                     staffMembers.map((staff: User) => {
-                      const assignedCount = serviceRecords?.filter(r => r.assignedStaffId === staff.id).length || 0;
+                      const assignedCount = serviceRecords?.filter((r: ServiceRecord) => r.assignedStaffId === staff.id).length || 0;
                       
                       return (
                         <div key={staff.id} className="flex justify-between items-center">
