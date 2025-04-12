@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Fragment } from "react";
 
 type Step = {
   id: number;
@@ -14,7 +15,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
   return (
     <div className="flex justify-between items-center mb-8">
       {steps.map((step, index) => (
-        <React.Fragment key={step.id}>
+        <Fragment key={step.id}>
           <div className="flex flex-col items-center">
             <div
               className={cn(
@@ -36,7 +37,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
               )}
             />
           )}
-        </React.Fragment>
+        </Fragment>
       ))}
     </div>
   );
