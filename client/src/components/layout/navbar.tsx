@@ -55,8 +55,7 @@ export default function Navbar({ user, setUser, transparent = false }: NavbarPro
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              {/* Logo */}
-              <Link href="/" className="flex items-center">
+              <Link href="/">
                 <div className="text-secondary font-bold text-xl flex items-center">
                   <svg className="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/>
@@ -68,19 +67,17 @@ export default function Navbar({ user, setUser, transparent = false }: NavbarPro
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link href="/" className="border-transparent text-gray-500 hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  Home
+                Home
               </Link>
               <Link href="/pricing" className="border-transparent text-gray-500 hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  Pricing
+                Pricing
               </Link>
               <Link href="/on-demand" className="border-transparent text-gray-500 hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  OnDemand
+                OnDemand
               </Link>
               {user && (
-                <Link href="/dashboard">
-                  <a className="border-transparent text-gray-500 hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Dashboard
-                  </a>
+                <Link href="/dashboard" className="border-transparent text-gray-500 hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Dashboard
                 </Link>
               )}
             </div>
@@ -97,11 +94,9 @@ export default function Navbar({ user, setUser, transparent = false }: NavbarPro
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard">
-                      <a className="w-full cursor-pointer">
-                        Dashboard
-                      </a>
+                  <DropdownMenuItem>
+                    <Link href="/dashboard" className="w-full">
+                      Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout}>
@@ -112,26 +107,19 @@ export default function Navbar({ user, setUser, transparent = false }: NavbarPro
               </DropdownMenu>
             ) : (
               <>
-                <Link href="/login">
-                  <a className="text-gray-500 hover:text-primary px-3 py-2 text-sm font-medium">
-                    Login
-                  </a>
+                <Link href="/login" className="text-gray-500 hover:text-primary px-3 py-2 text-sm font-medium">
+                  Login
                 </Link>
-                <Link href="/contact">
-                  <a className="text-gray-500 hover:text-primary px-3 py-2 text-sm font-medium">
-                    Contact
-                  </a>
+                <Link href="/contact" className="text-gray-500 hover:text-primary px-3 py-2 text-sm font-medium">
+                  Contact
                 </Link>
-                <Link href="/signup">
-                  <a className="bg-primary text-white hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium">
-                    Try Free
-                  </a>
+                <Link href="/signup" className="bg-primary text-white hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium">
+                  Try Free
                 </Link>
               </>
             )}
           </div>
           <div className="-mr-2 flex items-center sm:hidden">
-            {/* Mobile menu button */}
             <button
               type="button"
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-primary hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
@@ -153,26 +141,18 @@ export default function Navbar({ user, setUser, transparent = false }: NavbarPro
       {mobileMenuOpen && (
         <div className="sm:hidden bg-white shadow-md">
           <div className="pt-2 pb-3 space-y-1">
-            <Link href="/">
-              <a className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
-                Home
-              </a>
+            <Link href="/" className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
+              Home
             </Link>
-            <Link href="/pricing">
-              <a className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
-                Pricing
-              </a>
+            <Link href="/pricing" className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
+              Pricing
             </Link>
-            <Link href="/on-demand">
-              <a className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
-                OnDemand
-              </a>
+            <Link href="/on-demand" className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
+              OnDemand
             </Link>
             {user && (
-              <Link href="/dashboard">
-                <a className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
-                  Dashboard
-                </a>
+              <Link href="/dashboard" className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
+                Dashboard
               </Link>
             )}
             {user ? (
@@ -200,20 +180,14 @@ export default function Navbar({ user, setUser, transparent = false }: NavbarPro
               </>
             ) : (
               <>
-                <Link href="/login">
-                  <a className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
-                    Login
-                  </a>
+                <Link href="/login" className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
+                  Login
                 </Link>
-                <Link href="/contact">
-                  <a className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
-                    Contact
-                  </a>
+                <Link href="/contact" className="text-gray-500 hover:text-primary block px-3 py-2 text-base font-medium">
+                  Contact
                 </Link>
-                <Link href="/signup">
-                  <a className="bg-primary text-white block px-3 py-2 text-base font-medium">
-                    Try Free
-                  </a>
+                <Link href="/signup" className="bg-primary text-white block px-3 py-2 text-base font-medium">
+                  Try Free
                 </Link>
               </>
             )}

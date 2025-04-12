@@ -4,10 +4,10 @@ import Footer from "@/components/layout/footer";
 import TrustedBy from "@/components/home/trusted-by";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Check, Trash2, Recycle, Home, Calendar } from "lucide-react";
 import { Helmet } from "react-helmet";
-import React, { useState } from "react";
 
 type OnDemandProps = {
   user: UserWithSubscription | null;
