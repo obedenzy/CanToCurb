@@ -66,8 +66,6 @@ export default function OnDemand({ user }: OnDemandProps) {
   };
   return (
     <>
-      <Navbar user={user} />
-      
       <main>
         {/* Hero section */}
         <section className="bg-white py-12 md:py-20">
