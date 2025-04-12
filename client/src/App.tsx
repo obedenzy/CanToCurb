@@ -11,13 +11,43 @@ import Contact from "./pages/contact";
 import Signup from "./pages/signup";
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
+import Checkout from "./pages/checkout";
+import CheckoutSuccess from "./pages/checkout-success";
+import Subscribe from "./pages/subscribe";
+import SubscribeSuccess from "./pages/subscribe-success";
+import OnDemand from "./pages/on-demand";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { useState, useEffect } from "react";
+import { UserWithSubscription } from "./lib/types";
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || "");
 
 function Router() {
+  const [user, setUser] = useState<UserWithSubscription | null>(null);
+
+  // Fetch auth status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth-status');
+        const data = await response.json();
+        
+        if (data.authenticated && data.user) {
+          setUser(data.user as UserWithSubscription);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Failed to check auth status:", error);
+        setUser(null);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -29,6 +59,26 @@ function Router() {
           <Route path="/signup" component={Signup} />
           <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
+          
+          {/* New payment routes */}
+          <Route path="/checkout">
+            {() => <Checkout />}
+          </Route>
+          <Route path="/checkout/success">
+            {() => <CheckoutSuccess />}
+          </Route>
+          <Route path="/subscribe">
+            {() => <Subscribe />}
+          </Route>
+          <Route path="/subscribe/success">
+            {() => <SubscribeSuccess />}
+          </Route>
+          
+          {/* On-demand service route */}
+          <Route path="/on-demand">
+            {() => <OnDemand user={user} />}
+          </Route>
+          
           <Route component={NotFound} />
         </Switch>
       </main>

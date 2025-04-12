@@ -224,7 +224,7 @@ export default function Subscribe() {
           </CardHeader>
           <CardFooter className="flex justify-center">
             <Button asChild>
-              <Link href="/pricing">View Available Plans</Link>
+              <a href="/pricing">View Available Plans</a>
             </Button>
           </CardFooter>
         </Card>
