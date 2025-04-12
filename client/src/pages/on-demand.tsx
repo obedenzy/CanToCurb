@@ -4,14 +4,66 @@ import Footer from "@/components/layout/footer";
 import TrustedBy from "@/components/home/trusted-by";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Link } from "wouter";
-import { Check, Trash2, Recycle, Home } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Check, Trash2, Recycle, Home, Calendar } from "lucide-react";
+import { Helmet } from "react-helmet";
+import { useState } from "react";
 
 type OnDemandProps = {
   user: UserWithSubscription | null;
 };
 
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  features: string[];
+}
+
 export default function OnDemand({ user }: OnDemandProps) {
+  const [, navigate] = useLocation();
+  
+  const services: Service[] = [
+    {
+      id: "waste-removal",
+      name: "Waste Removal",
+      price: 59,
+      description: "One-time trash and recycling removal service. Includes trash, recycling, and yard waste pickup.",
+      features: [
+        "Up to 3 bins/bags (trash, recycle, yard waste)",
+        "Easy text or app scheduling",
+        "Photo confirmation of completed service"
+      ]
+    },
+    {
+      id: "can-cleaner",
+      name: "CanCleaner",
+      price: 45,
+      description: "Thorough cleaning of your trash cans. We deep clean and sanitize, removing odors, stains, and bacteria.",
+      features: [
+        "Removes odor, dirt, bugs, debris, and harmful bacteria",
+        "Perfect for homeowners, vacation rentals, and businesses",
+        "Eco-friendly sanitizing that kills pathogens"
+      ]
+    },
+    {
+      id: "can-to-curb",
+      name: "Can-to-Curb",
+      price: 29,
+      description: "One-time service to take your bins to the curb for trash day and return them after collection.",
+      features: [
+        "Perfect for vacations or when you're away",
+        "No commitment required",
+        "Book as needed with just 24-hour notice"
+      ]
+    }
+  ];
+  
+  const handleOrderNow = (service: Service) => {
+    // Navigate to checkout page with service details
+    navigate(`/checkout?amount=${service.price}&service=${encodeURIComponent(service.name)}`);
+  };
   return (
     <>
       <Navbar user={user} />
@@ -70,89 +122,33 @@ export default function OnDemand({ user }: OnDemandProps) {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Waste Removal */}
-              <Card className="bg-white overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold">Waste Removal</h3>
-                    <span className="text-2xl font-bold text-primary">$59</span>
+              {services.map((service) => (
+                <Card key={service.id} className="bg-white overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold">{service.name}</h3>
+                      <span className="text-2xl font-bold text-primary">${service.price}</span>
+                    </div>
+                    <p className="text-gray-600 mb-6">
+                      {service.description}
+                    </p>
+                    <ul className="space-y-2 mb-6">
+                      {service.features.map((feature, index) => (
+                        <li key={index} className="flex items-center">
+                          <Check className="text-green-500 mr-2 h-5 w-5" />
+                          <span className="text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleOrderNow(service)}
+                    >
+                      Order Now
+                    </Button>
                   </div>
-                  <p className="text-gray-600 mb-6">
-                    One-time trash and recycling removal service. Includes trash, recycling, and yard waste pickup.
-                  </p>
-                  <ul className="space-y-2 mb-6">
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Up to 3 bins/bags (trash, recycle, yard waste)</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Easy text or app scheduling</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Photo confirmation of completed service</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full">Order Now</Button>
-                </div>
-              </Card>
-              
-              {/* CanCleaner */}
-              <Card className="bg-white overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold">CanCleaner</h3>
-                    <span className="text-2xl font-bold text-primary">$45</span>
-                  </div>
-                  <p className="text-gray-600 mb-6">
-                    Thorough cleaning of your trash cans. We deep clean and sanitize, removing odors, stains, and bacteria.
-                  </p>
-                  <ul className="space-y-2 mb-6">
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Removes odor, dirt, bugs, debris, and harmful bacteria</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Perfect for homeowners, vacation rentals, and businesses</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Eco-friendly sanitizing that kills pathogens</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full">Order Now</Button>
-                </div>
-              </Card>
-              
-              {/* Can-to-Curb */}
-              <Card className="bg-white overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold">Can-to-Curb</h3>
-                    <span className="text-2xl font-bold text-primary">$29</span>
-                  </div>
-                  <p className="text-gray-600 mb-6">
-                    One-time service to take your bins to the curb for trash day and return them after collection.
-                  </p>
-                  <ul className="space-y-2 mb-6">
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Perfect for vacations or when you're away</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">No commitment required</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="text-green-500 mr-2 h-5 w-5" />
-                      <span className="text-gray-600">Book as needed with just 24-hour notice</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full">Order Now</Button>
-                </div>
-              </Card>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
