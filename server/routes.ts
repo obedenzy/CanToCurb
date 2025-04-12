@@ -1,470 +1,409 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { 
-  signupContactSchema, 
-  signupAddressSchema, 
-  signupPropertySchema, 
-  signupPaymentSchema,
-  contactFormSchema,
-  loginSchema
-} from "@shared/schema";
+import Stripe from "stripe";
 import bcrypt from "bcrypt";
+import { insertUserSchema, insertAddressSchema, insertPropertySchema, insertContactSchema } from "@shared/schema";
+import { ZodError } from "zod";
 import session from "express-session";
-import MemoryStore from "memorystore";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import Stripe from "stripe";
+import MemoryStore from "memorystore";
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('Warning: Missing STRIPE_SECRET_KEY environment variable. Using test mode.');
+  console.warn('Missing STRIPE_SECRET_KEY. Stripe functionality will be limited.');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_51NeGXqAReEvF1fXDvvHRjrB1wFcxLHSOSqwTWMYadPs77A1kZEyYlGbIlYLgjBLsC6BnzWSA3hhDqkgAaJ9nHT8200K08I2F5g', {
-  apiVersion: '2023-10-16',
-});
-
-// Helper to check if user is authenticated
-const isAuthenticated = (req: Request, res: Response, next: Function) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
-};
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup session
-  const MemoryStoreSession = MemoryStore(session);
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "very-secret-key",
-      resave: false,
-      saveUninitialized: false,
-      cookie: { maxAge: 86400000 }, // 24 hours
-      store: new MemoryStoreSession({
-        checkPeriod: 86400000, // prune expired entries every 24h
-      }),
-    })
-  );
-
-  // Initialize Passport
+  // Set up session management
+  const SessionStore = MemoryStore(session);
+  
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'secret-key-for-development',
+    resave: false,
+    saveUninitialized: false,
+    store: new SessionStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+  
+  // Set up passport
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Passport local strategy
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
+  
+  passport.use(new LocalStrategy(
+    { usernameField: 'email' },
+    async (email, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        const user = await storage.getUserByEmail(email);
         if (!user) {
-          return done(null, false, { message: "Incorrect username." });
+          return done(null, false, { message: 'Incorrect email or password.' });
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-          return done(null, false, { message: "Incorrect password." });
+        
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+          return done(null, false, { message: 'Incorrect email or password.' });
         }
-
+        
         return done(null, user);
-      } catch (err) {
-        return done(err);
+      } catch (error) {
+        return done(error);
       }
-    })
-  );
-
+    }
+  ));
+  
   passport.serializeUser((user: any, done) => {
     done(null, user.id);
   });
-
+  
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
       done(null, user);
-    } catch (err) {
-      done(err);
+    } catch (error) {
+      done(error);
     }
   });
+  
+  // Helper for error handling
+  const handleError = (res: Response, error: any) => {
+    console.error('API Error:', error);
+    
+    if (error instanceof ZodError) {
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: error.errors 
+      });
+    }
+    
+    return res.status(500).json({ 
+      message: error.message || 'Internal server error' 
+    });
+  };
 
-  // Authentication routes
-  app.post("/api/auth/login", (req, res, next) => {
-    try {
-      const { username, password } = loginSchema.parse(req.body);
-      
-      passport.authenticate("local", (err: any, user: any, info: any) => {
+  // Auth routes
+  app.post('/api/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || 'Authentication failed' });
+      }
+      req.logIn(user, (err) => {
         if (err) {
           return next(err);
         }
-        if (!user) {
-          return res.status(401).json({ message: info.message });
-        }
         
-        req.logIn(user, (err) => {
-          if (err) {
-            return next(err);
-          }
-          
-          // Remove password from response
-          const { password, ...userWithoutPassword } = user;
-          return res.json({ user: userWithoutPassword });
-        });
-      })(req, res, next);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
+        // Remove sensitive info before sending back
+        const safeUser = { ...user };
+        delete safeUser.password;
+        
+        return res.json({ message: 'Logged in successfully', user: safeUser });
+      });
+    })(req, res, next);
   });
-
-  app.post("/api/auth/logout", (req, res) => {
+  
+  app.post('/api/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
-        return res.status(500).json({ message: "Error logging out" });
+        return res.status(500).json({ message: 'Logout failed' });
       }
-      res.json({ message: "Logged out successfully" });
+      res.json({ message: 'Logged out successfully' });
     });
   });
-
-  app.get("/api/auth/me", (req, res) => {
+  
+  // Check auth status
+  app.get('/api/auth-status', (req, res) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+      return res.status(401).json({ authenticated: false });
     }
     
-    // Remove password from response
-    const { password, ...userWithoutPassword } = req.user as any;
-    res.json({ user: userWithoutPassword });
+    // Remove sensitive info before sending back
+    const safeUser = { ...req.user };
+    delete (safeUser as any).password;
+    
+    res.json({ 
+      authenticated: true, 
+      user: safeUser
+    });
   });
-
-  // User signup - step 1: Contact Information
-  app.post("/api/signup/contact-info", async (req, res) => {
+  
+  // User registration route
+  app.post('/api/register', async (req, res) => {
     try {
-      const contactInfo = signupContactSchema.parse(req.body);
+      const userInput = insertUserSchema.parse(req.body);
       
-      // Check if username or email already exists
-      const existingUsername = await storage.getUserByUsername(contactInfo.username);
-      if (existingUsername) {
-        return res.status(400).json({ message: "Username already exists" });
+      // Check if email is already registered
+      const existingUser = await storage.getUserByEmail(userInput.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
       }
-      
-      const existingEmail = await storage.getUserByEmail(contactInfo.email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-      
-      // Store in session for later use
-      req.session.signupData = {
-        ...req.session.signupData,
-        contactInfo,
-      };
-      
-      res.json({ message: "Contact information saved", step: 1 });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  // User signup - step 2: Service Address
-  app.post("/api/signup/service-address", (req, res) => {
-    try {
-      const serviceAddress = signupAddressSchema.parse(req.body);
-      
-      // Check if we have contact info from step 1
-      if (!req.session.signupData?.contactInfo) {
-        return res.status(400).json({ message: "Please complete contact information first" });
-      }
-      
-      // Store in session for later use
-      req.session.signupData = {
-        ...req.session.signupData,
-        serviceAddress,
-      };
-      
-      res.json({ message: "Service address saved", step: 2 });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  // User signup - step 3: Property Information
-  app.post("/api/signup/property-info", (req, res) => {
-    try {
-      const propertyInfo = signupPropertySchema.parse(req.body);
-      
-      // Check if we have service address from step 2
-      if (!req.session.signupData?.serviceAddress) {
-        return res.status(400).json({ message: "Please complete service address first" });
-      }
-      
-      // Store in session for later use
-      req.session.signupData = {
-        ...req.session.signupData,
-        propertyInfo,
-      };
-      
-      res.json({ message: "Property information saved", step: 3 });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  // User signup - step 4: Payment and complete signup
-  app.post("/api/signup/complete", async (req, res) => {
-    try {
-      const paymentInfo = signupPaymentSchema.parse(req.body);
-      
-      // Check if we have all previous steps
-      if (!req.session.signupData?.contactInfo || !req.session.signupData?.serviceAddress || !req.session.signupData?.propertyInfo) {
-        return res.status(400).json({ message: "Please complete all previous steps first" });
-      }
-      
-      const { contactInfo, serviceAddress, propertyInfo } = req.session.signupData;
       
       // Hash password
-      const hashedPassword = await bcrypt.hash(contactInfo.password, 10);
+      const hashedPassword = await bcrypt.hash(userInput.password, 10);
       
-      // Create user
+      // Create user with hashed password
       const user = await storage.createUser({
-        ...contactInfo,
-        password: hashedPassword,
+        ...userInput,
+        password: hashedPassword
       });
-      
-      // Create service address
-      const address = await storage.createAddress({
-        userId: user.id,
-        address1: serviceAddress.address1,
-        address2: serviceAddress.address2,
-        city: serviceAddress.city,
-        state: serviceAddress.state,
-        zip: serviceAddress.zip,
-        country: serviceAddress.country,
-        isServiceAddress: true,
-        isBillingAddress: serviceAddress.sameBillingAddress,
-      });
-      
-      // If billing address is different, create it
-      if (!serviceAddress.sameBillingAddress && req.body.billingAddress) {
-        await storage.createAddress({
-          userId: user.id,
-          ...req.body.billingAddress,
-          isServiceAddress: false,
-          isBillingAddress: true,
-        });
-      }
-      
-      // Create property
-      await storage.createProperty({
-        userId: user.id,
-        addressId: address.id,
-        ...propertyInfo,
-      });
-      
-      // Get selected plan
-      const plan = await storage.getPlan(paymentInfo.planId);
-      if (!plan) {
-        return res.status(400).json({ message: "Selected plan not found" });
-      }
-      
-      // Create subscription (free trial initially)
-      const startDate = new Date();
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 15); // 15-day trial
-      
-      await storage.createSubscription({
-        userId: user.id,
-        planId: paymentInfo.planId,
-        startDate,
-        endDate: null,
-        isActive: true,
-        isMonthlyBilling: !paymentInfo.isMonthlyBilling,
-        promoCode: paymentInfo.promoCode,
-      });
-      
-      // Clear signup session data
-      delete req.session.signupData;
       
       // Log the user in
       req.login(user, (err) => {
         if (err) {
-          return res.status(500).json({ message: "Error logging in after signup" });
+          return res.status(500).json({ message: "Authentication error" });
         }
         
-        // Remove password from response
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json({ 
-          message: "Account created successfully", 
-          user: userWithoutPassword,
-          trialEndDate
-        });
-      });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  // Plans
-  app.get("/api/plans", async (req, res) => {
-    try {
-      const plans = await storage.getPlans();
-      res.json({ plans });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // Contact form
-  app.post("/api/contact", async (req, res) => {
-    try {
-      const contactData = contactFormSchema.parse(req.body);
-      await storage.createContact(contactData);
-      res.status(201).json({ message: "Contact message sent successfully" });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  // User dashboard data
-  app.get("/api/dashboard", isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const addresses = await storage.getAddresses(user.id);
-      const properties = await storage.getProperties(user.id);
-      const subscriptions = await storage.getSubscriptions(user.id);
-      
-      const activeSubscription = await storage.getActiveSubscription(user.id);
-      let plan = null;
-      if (activeSubscription) {
-        plan = await storage.getPlan(activeSubscription.planId);
-      }
-      
-      res.json({
-        addresses,
-        properties,
-        subscriptions,
-        activeSubscription,
-        plan,
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // Stripe payment intent for subscription
-  app.post("/api/create-subscription", isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const { planId, isMonthlyBilling } = req.body;
-      
-      const plan = await storage.getPlan(planId);
-      if (!plan) {
-        return res.status(400).json({ message: "Selected plan not found" });
-      }
-      
-      // Get or create customer
-      let customerId = user.stripeCustomerId;
-      
-      if (!customerId) {
-        // Create a new customer
-        const customer = await stripe.customers.create({
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          metadata: {
-            userId: user.id.toString(),
-          },
-        });
+        // Remove sensitive info before sending back
+        const safeUser = { ...user };
+        delete safeUser.password;
         
-        customerId = customer.id;
-        await storage.updateStripeCustomerId(user.id, customerId);
-      }
-      
-      // Get price ID based on billing frequency
-      const priceId = isMonthlyBilling ? plan.stripePriceId : plan.stripeQuarterlyPriceId;
-      
-      if (!priceId) {
-        return res.status(400).json({ message: "This plan requires custom pricing. Please contact sales." });
-      }
-      
-      // Create a subscription with a trial period
-      const subscription = await stripe.subscriptions.create({
-        customer: customerId,
-        items: [{ price: priceId }],
-        trial_period_days: 15, // 15-day free trial
-        payment_behavior: 'default_incomplete',
-        expand: ['latest_invoice.payment_intent'],
+        return res.status(201).json({ 
+          message: "Registration successful", 
+          user: safeUser 
+        });
       });
-      
-      // Update user with subscription ID
-      await storage.updateStripeSubscriptionId(user.id, subscription.id);
-      
-      // Create a record in our database
-      const startDate = new Date();
-      await storage.createSubscription({
-        userId: user.id,
-        planId,
-        startDate,
-        endDate: null,
-        isActive: true,
-        isMonthlyBilling: !isMonthlyBilling,
-        promoCode: req.body.promoCode,
-      });
-      
-      res.json({
-        subscriptionId: subscription.id,
-        clientSecret: (subscription.latest_invoice as any).payment_intent.client_secret,
-      });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
+    } catch (error) {
+      handleError(res, error);
     }
   });
-
-  // Stripe webhook (for subscription events)
-  app.post("/api/stripe-webhook", async (req, res) => {
-    let event;
+  
+  // Address registration route
+  app.post('/api/address', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
     
     try {
-      // Verify webhook signature
-      const signature = req.headers["stripe-signature"] as string;
+      const addressInput = insertAddressSchema.parse(req.body);
+      const address = await storage.createAddress({
+        ...addressInput,
+        userId: (req.user as any).id
+      });
       
-      if (!process.env.STRIPE_WEBHOOK_SECRET) {
-        console.warn("Warning: STRIPE_WEBHOOK_SECRET not set. Skipping signature verification.");
-        event = req.body;
-      } else {
-        event = stripe.webhooks.constructEvent(
-          req.body,
-          signature,
-          process.env.STRIPE_WEBHOOK_SECRET
-        );
-      }
-      
-      // Handle the event
-      switch (event.type) {
-        case "customer.subscription.updated":
-        case "customer.subscription.deleted":
-          const subscription = event.data.object;
-          console.log(`Subscription ${subscription.id} was ${event.type.split(".")[2]}`);
-          // Update subscription status
-          break;
-        
-        case "invoice.payment_succeeded":
-          const invoice = event.data.object;
-          console.log(`Invoice ${invoice.id} payment succeeded`);
-          // Handle successful payment
-          break;
-          
-        case "invoice.payment_failed":
-          const failedInvoice = event.data.object;
-          console.log(`Invoice ${failedInvoice.id} payment failed`);
-          // Handle failed payment
-          break;
-          
-        default:
-          console.log(`Unhandled event type ${event.type}`);
-      }
-      
-      res.json({ received: true });
-    } catch (error: any) {
-      console.error(`Webhook error: ${error.message}`);
-      res.status(400).send(`Webhook Error: ${error.message}`);
+      res.status(201).json({ 
+        message: "Address saved successfully", 
+        address 
+      });
+    } catch (error) {
+      handleError(res, error);
     }
   });
+  
+  // Property registration route
+  app.post('/api/property', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    try {
+      const propertyInput = insertPropertySchema.parse(req.body);
+      const property = await storage.createProperty({
+        ...propertyInput,
+        userId: (req.user as any).id
+      });
+      
+      res.status(201).json({ 
+        message: "Property saved successfully", 
+        property 
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Get plans
+  app.get('/api/plans', async (req, res) => {
+    try {
+      const plans = await storage.getAllPlans();
+      res.json(plans);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Get user information
+  app.get('/api/user', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove sensitive info before sending back
+      const safeUser = { ...user };
+      delete safeUser.password;
+      
+      // Get associated data
+      const address = await storage.getAddressByUserId(user.id);
+      let property = null;
+      if (address) {
+        property = await storage.getPropertyByAddressId(address.id);
+      }
+      const subscription = await storage.getSubscriptionByUserId(user.id);
+      
+      res.json({
+        user: safeUser,
+        address,
+        property,
+        subscription
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Contact form submission
+  app.post('/api/contact', async (req, res) => {
+    try {
+      const contactInput = insertContactSchema.parse(req.body);
+      const contact = await storage.createContact(contactInput);
+      
+      res.status(201).json({ 
+        message: "Contact form submitted successfully", 
+        contactId: contact.id 
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Stripe integration
+  if (stripe) {
+    // Create subscription intent
+    app.post('/api/create-subscription', async (req, res) => {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      try {
+        const { planId, paymentMethod, billingCycle } = req.body;
+        
+        if (!planId || !paymentMethod || !billingCycle) {
+          return res.status(400).json({ message: "Missing required fields" });
+        }
+        
+        const user = await storage.getUser((req.user as any).id);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        const plan = await storage.getPlanById(Number(planId));
+        if (!plan) {
+          return res.status(404).json({ message: "Plan not found" });
+        }
+        
+        // Determine which Stripe price ID to use
+        const stripePriceId = billingCycle === 'quarterly' 
+          ? plan.stripePriceIdQuarterly 
+          : plan.stripePriceIdMonthly;
+          
+        if (!stripePriceId) {
+          return res.status(400).json({ message: "Custom pricing plan requires contacting sales" });
+        }
+        
+        // Create or retrieve Stripe customer
+        let customerId = user.stripeCustomerId;
+        
+        if (!customerId) {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            phone: user.phone,
+            payment_method: paymentMethod,
+            invoice_settings: {
+              default_payment_method: paymentMethod,
+            },
+          });
+          
+          customerId = customer.id;
+          await storage.updateStripeCustomerId(user.id, customerId);
+        } else {
+          // Update payment method if customer exists
+          await stripe.paymentMethods.attach(paymentMethod, {
+            customer: customerId,
+          });
+          
+          await stripe.customers.update(customerId, {
+            invoice_settings: {
+              default_payment_method: paymentMethod,
+            },
+          });
+        }
+        
+        // Create subscription
+        const subscription = await stripe.subscriptions.create({
+          customer: customerId,
+          items: [{ price: stripePriceId }],
+          payment_behavior: 'default_incomplete',
+          payment_settings: {
+            payment_method_types: ['card'],
+            save_default_payment_method: 'on_subscription',
+          },
+          expand: ['latest_invoice.payment_intent'],
+        });
+        
+        // Update user with subscription ID
+        await storage.updateStripeSubscriptionId(user.id, subscription.id);
+        
+        // Store subscription in our database
+        await storage.createSubscription({
+          userId: user.id,
+          planId: String(plan.id),
+          status: subscription.status,
+          currentPeriodStart: new Date(subscription.current_period_start * 1000),
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null
+        });
+        
+        // Return client secret for the payment intent
+        const invoice = subscription.latest_invoice as any;
+        const clientSecret = invoice?.payment_intent?.client_secret;
+        
+        res.json({
+          subscriptionId: subscription.id,
+          clientSecret,
+        });
+      } catch (error) {
+        handleError(res, error);
+      }
+    });
+    
+    // Alternative one-time payment if needed
+    app.post('/api/create-payment-intent', async (req, res) => {
+      try {
+        const { amount } = req.body;
+        
+        if (!amount) {
+          return res.status(400).json({ message: "Amount is required" });
+        }
+        
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(amount * 100), // Convert to cents
+          currency: 'usd',
+        });
+        
+        res.json({ clientSecret: paymentIntent.client_secret });
+      } catch (error) {
+        handleError(res, error);
+      }
+    });
+  }
 
   const httpServer = createServer(app);
-
   return httpServer;
 }

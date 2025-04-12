@@ -1,88 +1,78 @@
-import { UserWithSubscription } from "@/lib/types";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
+import React from "react";
 import ContactForm from "@/components/contact/contact-form";
-import TrustedBy from "@/components/home/trusted-by";
-import { PARTNERS } from "@/lib/constants";
+import { Helmet } from "react-helmet";
 
-type ContactProps = {
-  user: UserWithSubscription | null;
-};
-
-export default function Contact({ user }: ContactProps) {
+export default function Contact() {
   return (
     <>
-      <Navbar user={user} />
+      <Helmet>
+        <title>Contact Us - TrashMonkey</title>
+        <meta name="description" content="Get in touch with TrashMonkey for questions about our trash and recycling can-to-curb service. We're here to help!" />
+      </Helmet>
       
-      <main>
-        <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="md:flex">
-                <div className="md:w-1/2 p-8 md:p-12">
-                  <h2 className="text-3xl font-bold text-secondary mb-4">Contact CanMonkey</h2>
-                  <p className="text-gray-600 mb-6">
-                    Send your questions or feedback through our online form for the quickest 
-                    response from our support team. We're here to ensure you have a great 
-                    experience with CanMonkey!
-                  </p>
-                  
-                  <h3 className="text-xl font-semibold text-secondary mb-4">
-                    Trusted by more than 10,000+ properties to handle trash day.
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
-                    {PARTNERS.slice(0, 6).map((partner, index) => (
-                      <div key={index} className="flex items-center text-gray-800 font-bold">
-                        {partner.name}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-8">
-                    <h4 className="font-semibold text-secondary mb-2">Contact Information</h4>
-                    <div className="space-y-2">
-                      <p>📞 (480) 405-4595</p>
-                      <p>📍 528 South Mill Ave, Suite 201<br />Tempe, AZ 85281</p>
-                      <p>⏱️ Monday - Friday: 9am - 5pm MST</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="md:w-1/2 p-8 md:p-12 bg-white">
-                  <h3 className="text-lg font-semibold text-secondary mb-4">
-                    Fill out the form to connect with us. It's easier than sending smoke signals.
-                  </h3>
-                  
-                  <ContactForm />
+      <section id="contact" className="py-16 bg-neutral">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-secondary mb-6">Contact TrashMonkey</h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Send your questions or feedback through our online form for the quickest response from our support team. We're here to ensure you have a great experience with TrashMonkey!
+              </p>
+              
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold text-secondary mb-4">Trusted by more than 10,000+ properties to handle trash day.</h2>
+                <div className="flex flex-wrap gap-8 items-center opacity-70">
+                  <div className="h-7 text-gray-400">HOMES & VILLAS</div>
+                  <div className="h-7 text-gray-400">ILOVEVACATIONS</div>
+                  <div className="h-7 text-gray-400">AVANTSTAY</div>
+                  <div className="h-7 text-gray-400">GoodNight</div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* Map section - would be implemented with a real map integration in production */}
-        <section className="py-12 bg-light">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-secondary mb-4">Where We Serve</h2>
-              <p className="text-gray-600 max-w-3xl mx-auto">
-                We're rapidly expanding to new areas. Enter your address during signup 
-                to check if we service your location, or contact us for more information.
-              </p>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+                <h3 className="font-semibold text-secondary mb-2">Our Office</h3>
+                <p className="text-gray-600">
+                  528 South Mill Ave<br />
+                  Suite 201<br />
+                  Tempe, AZ 85281
+                </p>
+                <p className="text-gray-600 mt-2">
+                  Phone: (480) 405-4595<br />
+                  Email: support@trashmonkey.com
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <h3 className="font-semibold text-secondary mb-2">Hours of Operation</h3>
+                <p className="text-gray-600">
+                  Monday - Friday: 8:00 AM - 6:00 PM MST<br />
+                  Saturday: 9:00 AM - 2:00 PM MST<br />
+                  Sunday: Closed
+                </p>
+                <p className="text-gray-600 mt-2">
+                  Emergency support available 24/7 for existing customers.
+                </p>
+              </div>
             </div>
             
-            <div className="bg-gray-200 h-96 rounded-lg flex items-center justify-center">
-              <div className="text-gray-600">
-                Interactive service area map would be displayed here with Google Maps or similar integration
-              </div>
+            <ContactForm />
+          </div>
+        </div>
+      </section>
+      
+      {/* Map Section */}
+      <section className="py-8 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden">
+            <div className="w-full h-80 bg-gray-200 rounded-lg flex items-center justify-center">
+              <p className="text-gray-500">Map view of our office location</p>
             </div>
           </div>
-        </section>
-        
-        <TrustedBy />
-      </main>
-      
-      <Footer />
+          <p className="text-center text-sm text-gray-500 mt-2">
+            TrashMonkey Headquarters - Tempe, Arizona
+          </p>
+        </div>
+      </section>
     </>
   );
 }
