@@ -275,4 +275,11 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use Database storage instead of MemStorage
+import { DatabaseStorage, initializePlans } from "./database-storage";
+export const storage = new DatabaseStorage();
+
+// Initialize database with plans
+initializePlans().catch(err => {
+  console.error("Failed to initialize plans:", err);
+});
