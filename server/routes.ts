@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import Stripe from "stripe";
@@ -403,6 +403,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
   }
+
+  // ADMIN API ROUTES
+  
+  // Middleware to check for admin or staff privileges
+  const requireAdminOrStaff = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const user = req.user as any;
+    if (user.role !== "admin" && user.role !== "staff") {
+      return res.status(403).json({ message: "Forbidden: Insufficient permissions" });
+    }
+    
+    next();
+  };
+  
+  // Admin dashboard - get all service records with optional filters
+  app.get("/api/admin/service-records", requireAdminOrStaff, async (req, res) => {
+    try {
+      const { 
+        userId, 
+        propertyId, 
+        status, 
+        serviceType, 
+        startDate, 
+        endDate, 
+        assignedStaffId 
+      } = req.query;
+      
+      const filters: any = {};
+      
+      if (userId) filters.userId = Number(userId);
+      if (propertyId) filters.propertyId = Number(propertyId);
+      if (status) filters.status = status as string;
+      if (serviceType) filters.serviceType = serviceType as string;
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      if (assignedStaffId) filters.assignedStaffId = Number(assignedStaffId);
+      
+      const records = await storage.getAllServiceRecords(filters);
+      res.json(records);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Admin dashboard - get a specific service record
+  app.get("/api/admin/service-records/:id", requireAdminOrStaff, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const record = await storage.getServiceRecordById(id);
+      
+      if (!record) {
+        return res.status(404).json({ message: "Service record not found" });
+      }
+      
+      res.json(record);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Admin dashboard - update a service record
+  app.patch("/api/admin/service-records/:id", requireAdminOrStaff, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const updates = req.body;
+      
+      const updatedRecord = await storage.updateServiceRecord(id, updates);
+      res.json(updatedRecord);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Admin dashboard - get unassigned service records
+  app.get("/api/admin/unassigned-service-records", requireAdminOrStaff, async (req, res) => {
+    try {
+      const unassignedRecords = await storage.getUnassignedServiceRecords();
+      res.json(unassignedRecords);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Admin dashboard - get all staff members
+  app.get("/api/admin/staff", requireAdminOrStaff, async (req, res) => {
+    try {
+      const staffMembers = await storage.getStaffMembers();
+      res.json(staffMembers);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  // Create service record
+  app.post("/api/service-records", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const user = req.user as any;
+      const serviceRecord = await storage.createServiceRecord({
+        ...req.body,
+        userId: user.id
+      });
+      
+      res.status(201).json(serviceRecord);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

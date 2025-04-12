@@ -4,7 +4,8 @@ import {
   properties, type Property, type InsertProperty,
   subscriptions, type Subscription, type InsertSubscription,
   contacts, type Contact, type InsertContact,
-  plans, type Plan
+  plans, type Plan,
+  serviceRecords, type ServiceRecord, type InsertServiceRecord
 } from "@shared/schema";
 
 export interface IStorage {

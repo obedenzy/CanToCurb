@@ -233,7 +233,7 @@ export class DatabaseStorage implements IStorage {
     // Order by scheduled date, most recent first
     query = query.orderBy(desc(serviceRecords.scheduledDate));
     
-    return query;
+    return await query;
   }
   
   async updateServiceRecord(id: number, updates: Partial<Omit<InsertServiceRecord, 'id'>>): Promise<ServiceRecord> {
@@ -254,7 +254,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUnassignedServiceRecords(): Promise<ServiceRecord[]> {
-    return db
+    return await db
       .select()
       .from(serviceRecords)
       .where(
@@ -267,7 +267,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getStaffMembers(): Promise<User[]> {
-    return db
+    return await db
       .select()
       .from(users)
       .where(
