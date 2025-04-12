@@ -199,7 +199,10 @@ export default function SignupForm() {
             <div className="max-w-2xl mx-auto">
               <StepIndicator steps={steps} currentStep={currentStepIndex + 1} />
               
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(e);
+              }}>
                 {step}
               </form>
             </div>

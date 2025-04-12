@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/toast";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -51,15 +52,27 @@ export default function PersonalInfo({
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    updateFields(values);
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await form.trigger();
+
+    if (!form.formState.isValid) {
+      toast({
+        title: "Error",
+        description: "Please check your information and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateFields(form.getValues());
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <h3 className="text-lg font-medium text-gray-800 mb-4">Contact Information</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -74,7 +87,7 @@ export default function PersonalInfo({
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="lastName"
@@ -89,7 +102,7 @@ export default function PersonalInfo({
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="email"
@@ -103,7 +116,7 @@ export default function PersonalInfo({
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="password"
@@ -120,7 +133,7 @@ export default function PersonalInfo({
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="phone"
@@ -134,7 +147,7 @@ export default function PersonalInfo({
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="smsOptIn"
@@ -155,11 +168,12 @@ export default function PersonalInfo({
             </FormItem>
           )}
         />
-        
+
         <div className="pt-4">
           <Button
             type="submit"
             className="w-full bg-primary hover:bg-primary/90 text-white"
+            onClick={form.handleSubmit(handleSubmit)}
           >
             CONTINUE
           </Button>
