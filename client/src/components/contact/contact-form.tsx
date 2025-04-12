@@ -35,7 +35,7 @@ const interestOptions = [
 ];
 
 const propertyOptions = [
-  { value: "", label: "Select..." },
+  { value: "none", label: "Select..." },
   { value: "1", label: "1 property" },
   { value: "2-5", label: "2-5 properties" },
   { value: "6-10", label: "6-10 properties" },
