@@ -105,7 +105,6 @@ export default function AdminDashboard() {
       toast({
         title: "Staff Assigned",
         description: "Staff member has been assigned to this service",
-        variant: "success",
       });
       
       // Refetch data
@@ -134,7 +133,6 @@ export default function AdminDashboard() {
       toast({
         title: "Status Updated",
         description: `Service status updated to ${status}`,
-        variant: "success",
       });
       
       // Refetch data
@@ -287,7 +285,7 @@ export default function AdminDashboard() {
                           <TableCell>{formatDate(new Date(record.scheduledDate))}</TableCell>
                           <TableCell>
                             <Badge variant={
-                              record.status === 'completed' ? 'success' :
+                              record.status === 'completed' ? 'default' :
                               record.status === 'scheduled' ? 'default' :
                               'destructive'
                             }>
@@ -420,15 +418,15 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Scheduled</span>
-                    <span className="font-bold">{serviceRecords?.filter(r => r.status === 'scheduled').length || 0}</span>
+                    <span className="font-bold">{serviceRecords?.filter((r: ServiceRecord) => r.status === 'scheduled').length || 0}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Completed</span>
-                    <span className="font-bold">{serviceRecords?.filter(r => r.status === 'completed').length || 0}</span>
+                    <span className="font-bold">{serviceRecords?.filter((r: ServiceRecord) => r.status === 'completed').length || 0}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Cancelled</span>
-                    <span className="font-bold">{serviceRecords?.filter(r => r.status === 'cancelled').length || 0}</span>
+                    <span className="font-bold">{serviceRecords?.filter((r: ServiceRecord) => r.status === 'cancelled').length || 0}</span>
                   </div>
                 </div>
               </CardContent>

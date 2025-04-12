@@ -16,6 +16,7 @@ import CheckoutSuccess from "./pages/checkout-success";
 import Subscribe from "./pages/subscribe";
 import SubscribeSuccess from "./pages/subscribe-success";
 import OnDemand from "./pages/on-demand";
+import AdminDashboard from "./pages/admin/dashboard";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useState, useEffect } from "react";
@@ -78,6 +79,9 @@ function Router() {
           <Route path="/on-demand">
             {() => <OnDemand user={user} />}
           </Route>
+          
+          {/* Admin dashboard route */}
+          <Route path="/admin/dashboard" component={AdminDashboard} />
           
           <Route component={NotFound} />
         </Switch>
