@@ -53,6 +53,7 @@ function Router() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Navbar user={user} setUser={setUser} />
       <main className="flex-grow">
         <Switch>
           <Route path="/" component={Home} />
