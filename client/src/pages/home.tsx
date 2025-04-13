@@ -48,6 +48,31 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Service Areas */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-secondary mb-4">Service Areas</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We proudly serve these Central Ohio communities
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
+            {[
+              "Columbus", "Bexley", "Dublin", "Gahanna", "Grandview Heights",
+              "Grove City", "Hilliard", "Reynoldsburg", "Upper Arlington",
+              "Westerville", "Whitehall", "Worthington", "Delaware", "Powell",
+              "Sunbury", "Lancaster", "Pickerington"
+            ].map((city) => (
+              <div key={city} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <p className="text-center text-gray-800">{city}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       
       {/* Chat Support Button */}
       <div className="fixed bottom-4 right-4 z-50">
