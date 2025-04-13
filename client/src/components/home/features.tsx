@@ -1,3 +1,4 @@
+
 import { Clock, CheckCircle, DollarSign, Zap, Phone } from "lucide-react";
 
 const features = [
@@ -53,7 +54,7 @@ export default function Features() {
               key={index} 
               className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-center text-center hover:shadow-md transition-all duration-300"
             >
-              <div className="bg-primary bg-opacity-10 rounded-full p-3 mb-4">
+              <div className="bg-primary/10 rounded-full p-3 mb-4">
                 {feature.icon}
               </div>
               <h3 className="text-lg font-medium text-secondary mb-2">{feature.title}</h3>
