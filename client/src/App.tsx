@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Header from "./components/layout/header";
 import Footer from "./components/layout/footer";
+import Navbar from "./components/layout/navbar";
 import Home from "./pages/home";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
