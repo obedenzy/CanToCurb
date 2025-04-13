@@ -13,14 +13,16 @@ import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
 import Checkout from "./pages/checkout";
 import CheckoutSuccess from "./pages/checkout-success";
-import Subscribe from "./pages/subscribe";
-import SubscribeSuccess from "./pages/subscribe-success";
+import Subscribe from "@/pages/subscribe";
+import SubscribeSuccess from "@/pages/subscribe-success";
 import OnDemand from "./pages/on-demand";
 import AdminDashboard from "./pages/admin/dashboard";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useState, useEffect } from "react";
 import { UserWithSubscription } from "./lib/types";
+import OnDemandRequest from "@/pages/ondemand-request"; // Added import
+
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || "");
@@ -34,7 +36,7 @@ function Router() {
       try {
         const response = await fetch('/api/auth-status');
         const data = await response.json();
-        
+
         if (data.authenticated && data.user) {
           setUser(data.user as UserWithSubscription);
         } else {
@@ -45,7 +47,7 @@ function Router() {
         setUser(null);
       }
     };
-    
+
     checkAuth();
   }, []);
 
@@ -60,7 +62,7 @@ function Router() {
           <Route path="/signup" component={Signup} />
           <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
-          
+
           {/* New payment routes */}
           <Route path="/checkout">
             {() => <Checkout />}
@@ -74,15 +76,16 @@ function Router() {
           <Route path="/subscribe/success">
             {() => <SubscribeSuccess />}
           </Route>
-          
+
           {/* On-demand service route */}
           <Route path="/on-demand">
             {() => <OnDemand user={user} />}
           </Route>
-          
+          <Route path="/ondemand-request" component={OnDemandRequest} /> {/* Added route for OnDemandRequest */}
+
           {/* Admin dashboard route */}
           <Route path="/admin/dashboard" component={AdminDashboard} />
-          
+
           <Route component={NotFound} />
         </Switch>
       </main>

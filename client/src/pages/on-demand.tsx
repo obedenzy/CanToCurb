@@ -61,8 +61,8 @@ export default function OnDemand({ user }: OnDemandProps) {
   ];
   
   const handleOrderNow = (service: Service) => {
-    // Navigate to checkout page with service details
-    navigate(`/checkout?amount=${service.price}&service=${encodeURIComponent(service.name)}`);
+    // Navigate to ondemand request page
+    navigate('/ondemand-request');
   };
   return (
     <>
