@@ -1,0 +1,25 @@
+{
+  "name": "trash-monkey-server",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "NODE_ENV=development node --env-file=.env index.js",
+    "start": "NODE_ENV=production node --env-file=.env index.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcrypt": "^5.1.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "memorystore": "^1.6.7",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "stripe": "^18.0.0",
+    "ws": "^8.18.0",
+    "zod": "^3.23.8",
+    "zod-validation-error": "^3.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

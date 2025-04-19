@@ -1,0 +1,15 @@
+{
+  "schema": "./server/schema.js",
+  "out": "./drizzle",
+  "dialect": "postgresql",
+  "dbCredentials": {
+    "host": "35.238.25.245",
+    "port": 5432,
+    "user": "db_manager",
+    "password": "dbmanagerenz05",
+    "database": "cantocurb",
+    "ssl": {
+      "rejectUnauthorized": false
+    }
+  }
+}
